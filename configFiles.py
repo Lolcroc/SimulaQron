@@ -93,7 +93,7 @@ def construct_node_configs(nodes):
             for line in conf_top:
                 f.write(line + "\n")
             for j in range(nrNodes):
-                f.write("{}, localhost, {}\n".format(nodes[j], start_nr[i] + j))
+                f.write("{}, 127.0.0.1, {}\n".format(nodes[j], start_nr[i] + j))
 
     with open(node_file, "w") as f:
         for j in range(nrNodes):
