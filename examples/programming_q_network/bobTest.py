@@ -27,9 +27,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from SimulaQron.cqc.pythonLib.cqc import CQCConnection
+from SimulaQron.cqc.pythonLib.cqc import CQCConnection, qubit
 
 import numpy.random as random
+import numpy as np
 
 #####################################################################################################
 #
@@ -42,27 +43,57 @@ def main():
 
         n = Bob.recvClassical()[0]
 
-        theta = random.randint(2, size=n)
+        thetaB = random.randint(2, size=n, dtype='int8')
 
         Bob.set_pending(True)
         Bob.recvQubit()
-        qs = Bob.flush_factory(n)
+        qBs = Bob.flush_factory(n)
+
+        for qB, tB in zip(qBs, thetaB):
+            if tB == 1:
+                qB.H()
+            qB.measure()
+
+        # xB = np.asarray(Bob.flush(), dtype=np.int8)
+        xB = Bob.flush()
         Bob.set_pending(False)
 
-        k=[]
+        # -----
 
-        for q, theta in zip(qs, theta):
-            if theta == 1:
-                q.H()
-            k.append(q.measure())
+        Bob.sendClassical("Alice", thetaB)
+        thetaA = np.asarray(list(Bob.recvClassical()), dtype=np.int8)
 
-        # # Receive classical encoded message from Alice
-        # 
+        # -----
 
-        # # Calculate message
-        # m = (enc + k) % 2
+        S = []
 
-        print("Bob takes all of Alice's k={}".format(k))
+        for j in range(n):
+            if thetaA[j] == thetaB[j]:
+                S.append(j)
+
+        # -----
+
+        T = np.asarray(list(Bob.recvClassical()), dtype=np.int8)
+
+        # -----
+
+        xBT = [xB[t] for t in T]
+        Bob.sendClassical("Alice", xBT)
+
+        # -----
+
+        remain = [s for s in S if s not in T]
+        xBr = [xB[r] for r in remain]
+
+        # -----
+
+        r = np.asarray(list(Bob.recvClassical()), dtype=np.int8)
+
+        # -----
+
+        k = r ^ xBr
+
+        print("Bob made key={}".format(k))
 
 
 ##################################################################################################

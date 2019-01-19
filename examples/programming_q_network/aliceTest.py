@@ -30,7 +30,7 @@
 from SimulaQron.cqc.pythonLib.cqc import CQCConnection, qubit
 
 import numpy.random as random
-
+import numpy as np
 
 #####################################################################################################
 #
@@ -41,33 +41,68 @@ def main():
     # Initialize the connection
     with CQCConnection("Alice") as Alice:
 
-        n = 8;
-        x, theta = random.randint(2, size=(2,n))
+        n = 100;
+        xA, thetaA = random.randint(2, size=(2,n), dtype='int8')
 
-        Alice.sendClassical("Eve", n)
+        Alice.sendClassical("Bob", n)
         Alice.set_pending(True)
 
-        for xj, tj in zip(x, theta):
-            q = qubit(Alice)
-            if xj == 1:
-                q.X()
-            if tj == 1:
-                q.H()
-            Alice.sendQubit(q, "Eve")
+        for xAj, tAj in zip(xA, thetaA):
+            qA = qubit(Alice)
+            if xAj == 1:
+                qA.X()
+            if tAj == 1:
+                qA.H()
+            Alice.sendQubit(qA, "Eve")
 
         Alice.flush()
+        Alice.set_pending(False)
 
-        print("Alice done")
+        # -----
 
-        # Send qubit to Bob (via Eve)
+        thetaB = np.asarray(list(Alice.recvClassical()), dtype=np.int8)
+        Alice.sendClassical("Bob", thetaA)
 
+        # -----
 
-        # Encode and send a classical message m to Bob
-        # m = 0
-        # enc = (m + k) % 2
-        # 
+        S = []
 
-        # print("Alice slaps Bob with her massive q={}".format(q))
+        for j in range(n):
+            if thetaA[j] == thetaB[j]:
+                S.append(j)
+
+        # -----
+
+        T = random.choice(S, size=len(S)//2, replace=False)
+        Alice.sendClassical("Bob", list(T))
+
+        # -----
+
+        xAT = [xA[t] for t in T]
+        xBT = np.asarray(list(Alice.recvClassical()), dtype=np.int8)
+
+        W = 0
+        for xATj, xBTj in zip(xAT, xBT):
+            if xATj != xBTj:
+                W += 1
+
+        delta = W/len(T)
+
+        # -----
+
+        remain = [s for s in S if s not in T]
+        xAr = [xA[r] for r in remain]
+
+        # -----
+
+        r = random.randint(2, size=len(xAr))
+        Alice.sendClassical("Bob", list(r))
+
+        # -----
+
+        k = r ^ xAr
+
+        print("Alice made key={}".format(k))
 
 ##################################################################################################
 main()
