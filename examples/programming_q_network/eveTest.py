@@ -38,7 +38,7 @@ def main():
 
     # Initialize the connection
     with CQCConnection("Eve") as Eve:
-        n = 100
+        n = 16
 
         Eve.set_pending(True)
         # Receive qubit from Alice

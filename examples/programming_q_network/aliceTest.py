@@ -41,7 +41,7 @@ def main():
     # Initialize the connection
     with CQCConnection("Alice") as Alice:
 
-        n = 100;
+        n = 16;
         xA, thetaA = random.randint(2, size=(2,n), dtype='int8')
 
         Alice.sendClassical("Bob", n)
@@ -88,6 +88,8 @@ def main():
 
         delta = W/len(T)
 
+        print("Error delta: {}".format(delta))
+
         # -----
 
         remain = [s for s in S if s not in T]
@@ -100,7 +102,7 @@ def main():
 
         # -----
 
-        k = r ^ xAr
+        k = np.inner(r, xAr) % 2
 
         print("Alice made key={}".format(k))
 

@@ -91,7 +91,7 @@ def main():
 
         # -----
 
-        k = r ^ xBr
+        k = np.inner(r, xBr) % 2
 
         print("Bob made key={}".format(k))
 
