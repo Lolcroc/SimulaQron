@@ -89,13 +89,13 @@ def construct_node_configs(nodes):
 
     # Write to the configuration files
     for i in range(len(conf_files)):
-        with open(conf_files[i], "w") as f:
+        with open(conf_files[i], "w", newline="") as f:
             for line in conf_top:
                 f.write(line + "\n")
             for j in range(nrNodes):
                 f.write("{}, localhost, {}\n".format(nodes[j], start_nr[i] + j))
 
-    with open(node_file, "w") as f:
+    with open(node_file, "w", newline="") as f:
         for j in range(nrNodes):
             f.write("{}\n".format(nodes[j]))
 

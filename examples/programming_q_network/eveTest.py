@@ -39,11 +39,21 @@ def main():
     # Initialize the connection
     with CQCConnection("Eve") as Eve:
 
-        # Receive qubit from Alice
-        q = Eve.recvQubit()
+        n = Eve.recvClassical()[0]
+        Eve.sendClassical("Bob", n)
 
+        Eve.set_pending(True)
+        # Receive qubit from Alice
+        Eve.recvQubit()
+        qs = Eve.flush_factory(n)
+        
         # Forward the qubit to Bob
-        Eve.sendQubit(q, "Bob")
+        for q in qs:
+            Eve.sendQubit(q, "Bob")
+
+        Eve.flush()
+
+        print("Eve done")
 
 
 ##################################################################################################

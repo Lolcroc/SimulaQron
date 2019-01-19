@@ -29,6 +29,7 @@
 
 from SimulaQron.cqc.pythonLib.cqc import CQCConnection
 
+import numpy.random as random
 
 #####################################################################################################
 #
@@ -39,19 +40,29 @@ def main():
     # Initialize the connection
     with CQCConnection("Bob") as Bob:
 
-        # Receive qubit from Alice (via Eve)
-        q = Bob.recvQubit()
+        n = Bob.recvClassical()[0]
 
-        # Retreive key
-        k = q.measure()
+        theta = random.randint(2, size=n)
 
-        # Receive classical encoded message from Alice
-        enc = Bob.recvClassical()[0]
+        Bob.set_pending(True)
+        Bob.recvQubit()
+        qs = Bob.flush_factory(n)
+        Bob.set_pending(False)
 
-        # Calculate message
-        m = (enc + k) % 2
+        k=[]
 
-        print("Bob retrived the message m={} from Alice.".format(m))
+        for q, theta in zip(qs, theta):
+            if theta == 1:
+                q.H()
+            k.append(q.measure())
+
+        # # Receive classical encoded message from Alice
+        # 
+
+        # # Calculate message
+        # m = (enc + k) % 2
+
+        print("Bob takes all of Alice's k={}".format(k))
 
 
 ##################################################################################################
