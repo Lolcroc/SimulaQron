@@ -43,12 +43,17 @@ def main(n):
     # Initialize the connection
     with CQCConnection("Bob") as Bob:
 
+        # Create an n-sized random bit string theta
         thetaB = random.randint(2, size=n, dtype='int8')
 
+        # Allocate and fill qubits from Eve
         qBs = []
         for i in range(n):
             qBs.append(Bob.recvQubit())
 
+        # Measure each qubit along the base theta.
+        # theta = 0: Standard basis
+        # theta = 1: Hadamard basis
         xB = []
         for qB, tB in zip(qBs, thetaB):
             if tB == 1:
@@ -57,34 +62,38 @@ def main(n):
 
         # -----
 
+        # Retrieve Alice's bases and send Bob's own
         Bob.sendClassical("Alice", thetaB)
         thetaA = np.asarray(list(Bob.recvClassical()))
 
         # -----
 
+        # Allocate and store all indices which were created/measured in the same basis
         S = []
-
         for j in range(n):
             if thetaA[j] == thetaB[j]:
                 S.append(j)
 
         # -----
 
+        # Retrieve Alice's test set T for testing measurements
         T = np.asarray(list(Bob.recvClassical()))
 
         # -----
 
+        # Retrieve Alice's measurements for test set T and send Bob's own
         xBT = [xB[t] for t in T]
         Bob.sendClassical("Alice", xBT)
         xAT = np.asarray(list(Bob.recvClassical()))
 
+        # Calculate the number of disagreements in test set T
         W = 0
         for xATj, xBTj in zip(xAT, xBT):
             if xATj != xBTj:
                 W += 1
 
+        # Calculate the delta error and abort the protocol if d > 0
         delta = W/len(T)
-
         print("Bob's delta error: {}".format(delta))
 
         if delta > 0:
@@ -93,17 +102,19 @@ def main(n):
 
         # -----
 
+        # Retrieve the remaining measurements not used for test set T
         remain = [s for s in S if s not in T]
         xBr = [xB[r] for r in remain]
 
         # -----
 
+        # Retrieve Alice's random seed for the extractor
         r = np.asarray(list(Bob.recvClassical()))
 
         # -----
 
+        # Calculate 1 bit of key by randomly XORing Bob's remaining bit-string x with the seed
         k = np.inner(r, xBr) % 2
-
         print("Bob made key = {}".format(k))
 
 

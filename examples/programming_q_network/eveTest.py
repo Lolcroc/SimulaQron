@@ -39,13 +39,17 @@ def main(n, active=False):
 
     # Initialize the connection
     with CQCConnection("Eve") as Eve:
+
+        # Allocate and fill qubits from Alice
         qEs = []
         for i in range(n):
             qE = Eve.recvQubit()
+            # If active, measure all the qubits and send the post-measurement states
             if active:
                 qE.measure(inplace=True)
             qEs.append(qE)
 
+        # Send the qubits to Bob
         for qE in qEs:
             Eve.sendQubit(qE, "Bob")
 
