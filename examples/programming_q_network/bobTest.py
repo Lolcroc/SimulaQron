@@ -29,6 +29,8 @@
 
 from SimulaQron.cqc.pythonLib.cqc import CQCConnection, qubit
 
+import sys
+
 import numpy.random as random
 import numpy as np
 
@@ -36,32 +38,27 @@ import numpy as np
 #
 # main
 #
-def main():
+def main(n):
 
     # Initialize the connection
     with CQCConnection("Bob") as Bob:
 
-        n = Bob.recvClassical()[0]
-
         thetaB = random.randint(2, size=n, dtype='int8')
 
-        Bob.set_pending(True)
-        Bob.recvQubit()
-        qBs = Bob.flush_factory(n)
+        qBs = []
+        for i in range(n):
+            qBs.append(Bob.recvQubit())
 
+        xB = []
         for qB, tB in zip(qBs, thetaB):
             if tB == 1:
                 qB.H()
-            qB.measure()
-
-        # xB = np.asarray(Bob.flush(), dtype=np.int8)
-        xB = Bob.flush()
-        Bob.set_pending(False)
+            xB.append(qB.measure())
 
         # -----
 
         Bob.sendClassical("Alice", thetaB)
-        thetaA = np.asarray(list(Bob.recvClassical()), dtype=np.int8)
+        thetaA = np.asarray(list(Bob.recvClassical()))
 
         # -----
 
@@ -73,7 +70,7 @@ def main():
 
         # -----
 
-        T = np.asarray(list(Bob.recvClassical()), dtype=np.int8)
+        T = np.asarray(list(Bob.recvClassical()))
 
         # -----
 
@@ -87,7 +84,7 @@ def main():
 
         # -----
 
-        r = np.asarray(list(Bob.recvClassical()), dtype=np.int8)
+        r = np.asarray(list(Bob.recvClassical()))
 
         # -----
 
@@ -97,4 +94,6 @@ def main():
 
 
 ##################################################################################################
-main()
+if __name__ == '__main__':
+    n = int(sys.argv[1])
+    main(n)

@@ -29,30 +29,32 @@
 
 from SimulaQron.cqc.pythonLib.cqc import CQCConnection
 
+import sys
 
 #####################################################################################################
 #
 # main
 #
-def main():
+def main(n, active=False):
 
     # Initialize the connection
     with CQCConnection("Eve") as Eve:
-        n = 16
+        qEs = []
+        print("Eve active: ", active)
+        for i in range(n):
+            qE = Eve.recvQubit()
+            if active:
+                qE.measure(inplace=True)
+            qEs.append(qE)
 
-        Eve.set_pending(True)
-        # Receive qubit from Alice
-        Eve.recvQubit()
-        qEs = Eve.flush_factory(n)
-        
-        # Forward the qubit to Bob
         for qE in qEs:
             Eve.sendQubit(qE, "Bob")
-
-        Eve.flush()
 
         print("Eve done")
 
 
 ##################################################################################################
-main()
+if __name__ == '__main__':
+    n = int(sys.argv[1])
+    eve = sys.argv[2] == "y"
+    main(n, eve)

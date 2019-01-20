@@ -29,6 +29,8 @@
 
 from SimulaQron.cqc.pythonLib.cqc import CQCConnection, qubit
 
+import sys
+
 import numpy.random as random
 import numpy as np
 
@@ -36,16 +38,12 @@ import numpy as np
 #
 # main
 #
-def main():
+def main(n):
 
     # Initialize the connection
     with CQCConnection("Alice") as Alice:
 
-        n = 16;
         xA, thetaA = random.randint(2, size=(2,n), dtype='int8')
-
-        Alice.sendClassical("Bob", n)
-        Alice.set_pending(True)
 
         for xAj, tAj in zip(xA, thetaA):
             qA = qubit(Alice)
@@ -55,12 +53,9 @@ def main():
                 qA.H()
             Alice.sendQubit(qA, "Eve")
 
-        Alice.flush()
-        Alice.set_pending(False)
-
         # -----
 
-        thetaB = np.asarray(list(Alice.recvClassical()), dtype=np.int8)
+        thetaB = np.asarray(list(Alice.recvClassical()))
         Alice.sendClassical("Bob", thetaA)
 
         # -----
@@ -79,7 +74,7 @@ def main():
         # -----
 
         xAT = [xA[t] for t in T]
-        xBT = np.asarray(list(Alice.recvClassical()), dtype=np.int8)
+        xBT = np.asarray(list(Alice.recvClassical()))
 
         W = 0
         for xATj, xBTj in zip(xAT, xBT):
@@ -107,4 +102,7 @@ def main():
         print("Alice made key={}".format(k))
 
 ##################################################################################################
-main()
+
+if __name__ == '__main__':
+    n = int(sys.argv[1])
+    main(n)
