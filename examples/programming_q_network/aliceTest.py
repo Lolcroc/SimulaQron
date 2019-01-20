@@ -43,8 +43,10 @@ def main(n):
     # Initialize the connection
     with CQCConnection("Alice") as Alice:
 
+        # Create 2 n-sized vectors of random bits
         xA, thetaA = random.randint(2, size=(2,n), dtype='int8')
 
+        
         for xAj, tAj in zip(xA, thetaA):
             qA = qubit(Alice)
             if xAj == 1:
@@ -75,6 +77,7 @@ def main(n):
 
         xAT = [xA[t] for t in T]
         xBT = np.asarray(list(Alice.recvClassical()))
+        Alice.sendClassical("Bob", xAT)
 
         W = 0
         for xATj, xBTj in zip(xAT, xBT):
@@ -83,7 +86,11 @@ def main(n):
 
         delta = W/len(T)
 
-        print("Error delta: {}".format(delta))
+        print("Alice's delta error: {}".format(delta))
+
+        if delta > 0:
+            print("Alice aborted protocol")
+            return
 
         # -----
 
@@ -99,10 +106,12 @@ def main(n):
 
         k = np.inner(r, xAr) % 2
 
-        print("Alice made key={}".format(k))
+        print("Alice made key = {}".format(k))
 
 ##################################################################################################
 
 if __name__ == '__main__':
     n = int(sys.argv[1])
     main(n)
+
+    print("Alice done")

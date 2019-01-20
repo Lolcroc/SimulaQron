@@ -76,6 +76,20 @@ def main(n):
 
         xBT = [xB[t] for t in T]
         Bob.sendClassical("Alice", xBT)
+        xAT = np.asarray(list(Bob.recvClassical()))
+
+        W = 0
+        for xATj, xBTj in zip(xAT, xBT):
+            if xATj != xBTj:
+                W += 1
+
+        delta = W/len(T)
+
+        print("Bob's delta error: {}".format(delta))
+
+        if delta > 0:
+            print("Bob aborted protocol")
+            return
 
         # -----
 
@@ -90,10 +104,12 @@ def main(n):
 
         k = np.inner(r, xBr) % 2
 
-        print("Bob made key={}".format(k))
+        print("Bob made key = {}".format(k))
 
 
 ##################################################################################################
 if __name__ == '__main__':
     n = int(sys.argv[1])
     main(n)
+
+    print("Bob done")

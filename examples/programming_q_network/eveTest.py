@@ -40,7 +40,6 @@ def main(n, active=False):
     # Initialize the connection
     with CQCConnection("Eve") as Eve:
         qEs = []
-        print("Eve active: ", active)
         for i in range(n):
             qE = Eve.recvQubit()
             if active:
@@ -50,11 +49,11 @@ def main(n, active=False):
         for qE in qEs:
             Eve.sendQubit(qE, "Bob")
 
-        print("Eve done")
-
 
 ##################################################################################################
 if __name__ == '__main__':
     n = int(sys.argv[1])
     eve = sys.argv[2] == "y"
     main(n, eve)
+
+    print("Eve done")
